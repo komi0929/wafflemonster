@@ -1,0 +1,76 @@
+# ============================================
+# Unity .gitignore — World-Class WebGL Project
+# ============================================
+
+# Unity Generated
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# WebGL Build Output
+/WebGL-Build/
+/WebGL-Build-*/
+
+# Unity Asset Store
+/Assets/AssetStoreTools*
+
+# Visual Studio / Rider / VS Code
+.vs/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# OS Generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Crashlytics
+crashlytics-build.properties
+sysinfo.txt
+
+# Node.js (scripts/)
+node_modules/
+package-lock.json
+
+# Environment
+.env
+.env.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# Compressed Archives
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip

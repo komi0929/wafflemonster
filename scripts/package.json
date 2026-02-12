@@ -1,0 +1,11 @@
+{
+  "name": "soyya-scripts",
+  "version": "1.0.0",
+  "description": "SOYYA WebGL ビルド自動化ツール",
+  "private": true,
+  "scripts": {
+    "serve": "node serve.js",
+    "serve:dev": "node serve.js ../WebGL-Build-Dev"
+  },
+  "dependencies": {}
+}

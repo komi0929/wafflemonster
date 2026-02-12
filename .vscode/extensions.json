@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "ms-dotnettools.csharp",
+    "ms-dotnettools.csdevkit",
+    "visualstudiotoolsforunity.vstuc",
+    "unity.unity-debug",
+    "kleber-swf.unity-code-snippets",
+    "slevesque.shader",
+    "xabikos.javascriptsnippets",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "eamodio.gitlens",
+    "github.copilot"
+  ]
+}
