@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using System.IO;
 using System.Linq;
 
 namespace Soyya.Editor
@@ -23,11 +24,17 @@ namespace Soyya.Editor
                 .Select(s => s.path)
                 .ToArray();
 
+            // Build Settingsが空の場合、Assets/Scenesフォルダから自動検出
             if (scenes.Length == 0)
             {
-                Debug.LogError("[WebGLBuilder] 有効なシーンが見つかりません。Build Settingsにシーンを追加してください。");
-                EditorApplication.Exit(1);
-                return;
+                Debug.Log("[WebGLBuilder] Build Settingsにシーンが未登録。Assets/Scenesフォルダから自動検出します...");
+                scenes = Directory.GetFiles("Assets/Scenes", "*.unity", SearchOption.AllDirectories);
+                if (scenes.Length == 0)
+                {
+                    Debug.LogError("[WebGLBuilder] 有効なシーンが見つかりません。Assets/Scenesフォルダにシーンを配置してください。");
+                    EditorApplication.Exit(1);
+                    return;
+                }
             }
 
             Debug.Log($"[WebGLBuilder] ビルド対象シーン: {string.Join(", ", scenes)}");
@@ -74,11 +81,17 @@ namespace Soyya.Editor
                 .Select(s => s.path)
                 .ToArray();
 
+            // Build Settingsが空の場合、Assets/Scenesフォルダから自動検出
             if (scenes.Length == 0)
             {
-                Debug.LogError("[WebGLBuilder] 有効なシーンが見つかりません。");
-                EditorApplication.Exit(1);
-                return;
+                Debug.Log("[WebGLBuilder] Build Settingsにシーンが未登録。Assets/Scenesフォルダから自動検出します...");
+                scenes = Directory.GetFiles("Assets/Scenes", "*.unity", SearchOption.AllDirectories);
+                if (scenes.Length == 0)
+                {
+                    Debug.LogError("[WebGLBuilder] 有効なシーンが見つかりません。");
+                    EditorApplication.Exit(1);
+                    return;
+                }
             }
 
             // dev buildでは圧縮なし（高速）
