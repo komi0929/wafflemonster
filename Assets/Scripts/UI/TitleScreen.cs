@@ -46,31 +46,18 @@ namespace Soyya.WaffleMonster
                 float scale = 1f + Mathf.Sin(_pulseTimer * 1.5f) * 0.03f;
                 _titleText.transform.localScale = Vector3.one * scale;
             }
-
-            // Spaceキーでもスタート
-            if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return))
-            {
-                OnStartClicked();
-            }
         }
 
         private void ShowTitle()
         {
             gameObject.SetActive(true);
             Time.timeScale = 0f;
-
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
         }
 
         private void OnStartClicked()
         {
             gameObject.SetActive(false);
             Time.timeScale = 1f;
-
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-
             GameManager.Instance?.StartGame();
         }
 

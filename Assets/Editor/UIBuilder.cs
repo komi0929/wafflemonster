@@ -20,13 +20,14 @@ namespace Soyya.WaffleMonster
 
             var canvas = CreateCanvas("GameCanvas");
             BuildHUD(canvas.transform);
+            BuildMobileControls(canvas.transform);
             BuildTitleScreen(canvas.transform);
             BuildResultScreen(canvas.transform);
 
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
                 UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
 
-            Debug.Log("[UIBuilder] 全UI構築完了");
+            Debug.Log("[UIBuilder] 全UI構築完了（スマホ専用）");
         }
 
         // ─── Canvas作成 ───
@@ -148,6 +149,75 @@ namespace Soyya.WaffleMonster
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
+        // ─── モバイルコントロール ───
+
+        private static void BuildMobileControls(Transform parent)
+        {
+            var ctrlRoot = new GameObject("MobileControls");
+            ctrlRoot.transform.SetParent(parent, false);
+
+            // ── 左: ジョイスティック ──
+            var joyBg = new GameObject("JoystickBG");
+            joyBg.transform.SetParent(ctrlRoot.transform, false);
+            var joyBgImg = joyBg.AddComponent<Image>();
+            joyBgImg.color = new Color(1, 1, 1, 0.15f);
+            var joyBgRt = joyBg.GetComponent<RectTransform>();
+            joyBgRt.anchorMin = new Vector2(0, 0);
+            joyBgRt.anchorMax = new Vector2(0, 0);
+            joyBgRt.pivot = new Vector2(0.5f, 0.5f);
+            joyBgRt.anchoredPosition = new Vector2(140, 140);
+            joyBgRt.sizeDelta = new Vector2(200, 200);
+
+            var joyHandle = new GameObject("JoystickHandle");
+            joyHandle.transform.SetParent(joyBg.transform, false);
+            var handleImg = joyHandle.AddComponent<Image>();
+            handleImg.color = new Color(1, 1, 1, 0.4f);
+            var handleRt = joyHandle.GetComponent<RectTransform>();
+            handleRt.sizeDelta = new Vector2(80, 80);
+            handleRt.anchoredPosition = Vector2.zero;
+
+            // VirtualJoystick コンポーネント
+            var joystick = joyBg.AddComponent<VirtualJoystick>();
+            var joySo = new SerializedObject(joystick);
+            SetProp(joySo, "_background", joyBg.GetComponent<RectTransform>());
+            SetProp(joySo, "_handle", handleRt);
+            joySo.ApplyModifiedPropertiesWithoutUndo();
+
+            // ── 右: 投擲ボタン ──
+            var throwBtn = CreateButton(ctrlRoot.transform, "ThrowButton",
+                "🧇", new Color(1f, 0.3f, 0.6f, 0.7f),
+                Vector2.zero, new Vector2(120, 120));
+            var throwRt = throwBtn.GetComponent<RectTransform>();
+            throwRt.anchorMin = new Vector2(1, 0);
+            throwRt.anchorMax = new Vector2(1, 0);
+            throwRt.pivot = new Vector2(0.5f, 0.5f);
+            throwRt.anchoredPosition = new Vector2(-100, 140);
+            // ボタンラベルを大きくする
+            var label = throwBtn.transform.Find("Label");
+            if (label != null)
+            {
+                var tmp = label.GetComponent<TextMeshProUGUI>();
+                if (tmp != null) tmp.fontSize = 48;
+            }
+
+            // ── PlayerControllerに接続 ──
+            var player = Object.FindFirstObjectByType<PlayerController>();
+            if (player != null)
+            {
+                var pSo = new SerializedObject(player);
+                SetProp(pSo, "_joystick", joystick);
+                pSo.ApplyModifiedPropertiesWithoutUndo();
+
+                // 投擲ボタンのonClickにPlayerController.ThrowWaffleを接続
+                var btn = throwBtn.GetComponent<Button>();
+                UnityEditor.Events.UnityEventTools.AddPersistentListener(
+                    btn.onClick,
+                    new UnityEngine.Events.UnityAction(player.ThrowWaffle));
+            }
+
+            Debug.Log("[UIBuilder] モバイルコントロール構築完了");
+        }
+
         // ─── タイトル画面 ───
 
         private static void BuildTitleScreen(Transform parent)
@@ -193,8 +263,8 @@ namespace Soyya.WaffleMonster
 
             // 操作説明
             var controlsText = CreateTMP(titleRoot.transform, "ControlsText",
-                "WASD: 移動　|　マウス: 視点　|　左クリック: ワッフル投擲\n" +
-                "SPACE: ジャンプ　|　ESC: カーソル解放",
+                "左スティック: 移動　|　右スワイプ: 視点操作\n" +
+                "🧇ボタン: ワッフル投擲",
                 16, TextAlignmentOptions.Center,
                 new Color(0.7f, 0.7f, 0.8f, 0.7f));
             var ctrlRt = controlsText.GetComponent<RectTransform>();
