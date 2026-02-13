@@ -2,16 +2,16 @@
 
 ## プロジェクト概要
 
-**世界最高峰の3Dゲーム** — Unity WebGL でブラウザ上に展開
+**WaffleMonster** — 香港/台湾ネオン裏路地を舞台にした3D逃走アクションゲーム
+バブルワッフルの球でモンスターの気をそらして逃げ切れ！
 
 ## 技術スタック
 
-- **Engine**: Unity 6 LTS (6000.0.x) — URP (Universal Render Pipeline)
-- **Build Target**: WebGL (WebAssembly + WebGPU)
+- **Engine**: Unity 6 LTS (6000.3.8f1) — URP (Universal Render Pipeline)
+- **Build Target**: WebGL (WebAssembly)
 - **Language**: C# (.NET Standard 2.1)
 - **Version Control**: Git
 - **IDE**: VS Code + Unity Extension
-- **Preview Server**: Node.js (Express)
 - **Deploy**: GitHub Pages / Vercel
 
 ## AI行動規範
@@ -26,7 +26,7 @@
 ### コーディング規約
 
 - **命名**: PascalCase (public), camelCase (private), `_` prefix for private fields
-- **ファイル構成**: 1クラス1ファイル、namespaceは `Soyya.*`
+- **ファイル構成**: 1クラス1ファイル、namespaceは `Soyya.WaffleMonster`
 - **MonoBehaviour**: `Awake` > `Start` > `Update` の順序を厳守
 - **パフォーマンス**: Object Pooling必須、GC Alloc最小化
 
@@ -44,31 +44,32 @@
 - **コミット**: 機能単位で短く、日本語メッセージ
 - **自動Push**: ビルド成功時に自動コミット＆プッシュ
 
-## ディレクトリ構造
+## ゲームアーキテクチャ
+
+### namespace: `Soyya.WaffleMonster`
 
 ```
-soyya/
-├── Assets/
-│   ├── Scenes/          # Unityシーン
-│   ├── Scripts/         # C#スクリプト
-│   │   ├── Core/        # ゲームコアロジック
-│   │   ├── UI/          # UIコントローラー
-│   │   ├── Gameplay/    # ゲームプレイ機能
-│   │   └── Utils/       # ユーティリティ
-│   ├── Prefabs/         # プレハブ
-│   ├── Materials/       # マテリアル
-│   ├── Textures/        # テクスチャ
-│   ├── Models/          # 3Dモデル
-│   ├── Shaders/         # カスタムシェーダー
-│   ├── Audio/           # サウンド
-│   ├── Animations/      # アニメーション
-│   ├── Editor/          # エディタ拡張
-│   └── Resources/       # ランタイムロードアセット
-├── Packages/            # Unityパッケージ
-├── ProjectSettings/     # Unity設定
-├── scripts/             # ビルド自動化
-├── WebGL-Build/         # ビルド出力 (gitignored)
-├── .vscode/             # VS Code設定
-├── .agent/workflows/    # AIエージェントワークフロー
-└── GEMINI.md            # プロジェクト憲法（このファイル）
+Assets/
+├── Scripts/
+│   ├── Core/            # GameManager, GameState
+│   ├── Gameplay/        # Player, Monster, Waffle, Goal, NeonSign, Lantern
+│   ├── UI/              # VirtualJoystick, MobileHUD, ResultScreen
+│   └── Utils/           # ObjectPool, AudioManager
+├── Editor/              # GameSceneBuilder
+├── Scenes/
+├── Prefabs/
+├── Materials/
+├── Textures/
+├── Models/
+├── Shaders/
+├── Audio/
+└── Animations/
 ```
+
+### モンスター仕様
+
+| 名前 | クラス | 速度 | 食事時間 | 特殊能力 |
+|---|---|---|---|---|
+| Whi-chan | GhostMonster | 遅い | 5秒 | 壁透過検知、浮遊 |
+| Mecha-paku | MechaMonster | 速い | 3秒 | 突進加速 |
+| Fuzz-nom | FuzzyMonster | 中速 | 4秒 | 360°索敵、仲間呼び |
