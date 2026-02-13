@@ -378,53 +378,46 @@ namespace Soyya.WaffleMonster
             }
         }
 
-        private static Shader _cachedURPLitShader;
+        private static Material _baseMaterial;
 
         private static Material CreateURPMaterial(Color color)
         {
-            if (_cachedURPLitShader == null)
+            if (_baseMaterial == null)
             {
-                // Unity 6.3 では複数の名前でLitシェーダーを検索
-                string[] shaderNames = {
-                    "Universal Render Pipeline/Lit",
-                    "URP/Lit",
-                    "Shader Graphs/Lit",
-                };
-
-                foreach (var name in shaderNames)
+                // 方法1: RenderPipelineのデフォルトマテリアルを使用
+                var rpAsset = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline;
+                if (rpAsset != null)
                 {
-                    _cachedURPLitShader = Shader.Find(name);
-                    if (_cachedURPLitShader != null) break;
+                    _baseMaterial = rpAsset.defaultMaterial;
+                    Debug.Log($"[GameSceneBuilder] Using RenderPipeline default material: {_baseMaterial?.shader?.name}");
                 }
 
-                // AssetDatabaseから検索（最終手段）
-                if (_cachedURPLitShader == null)
+                // 方法2: プロジェクト内の既存Litマテリアルを検索
+                if (_baseMaterial == null)
                 {
-                    string[] guids = AssetDatabase.FindAssets("Lit t:Shader");
+                    string[] guids = AssetDatabase.FindAssets("t:Material");
                     foreach (string guid in guids)
                     {
                         string path = AssetDatabase.GUIDToAssetPath(guid);
-                        if (path.Contains("Universal") || path.Contains("URP"))
+                        var m = AssetDatabase.LoadAssetAtPath<Material>(path);
+                        if (m != null && m.shader != null && m.shader.name.Contains("Lit"))
                         {
-                            _cachedURPLitShader = AssetDatabase.LoadAssetAtPath<Shader>(path);
-                            if (_cachedURPLitShader != null)
-                            {
-                                Debug.Log($"[GameSceneBuilder] Found URP shader at: {path}");
-                                break;
-                            }
+                            _baseMaterial = m;
+                            Debug.Log($"[GameSceneBuilder] Found existing Lit material at: {path}");
+                            break;
                         }
                     }
                 }
 
-                // 最終フォールバック
-                if (_cachedURPLitShader == null)
+                // 方法3: 最終フォールバック
+                if (_baseMaterial == null)
                 {
-                    _cachedURPLitShader = Shader.Find("Standard");
-                    Debug.LogWarning("[GameSceneBuilder] URP Litシェーダーが見つかりません。Standardを使用します。");
+                    _baseMaterial = new Material(Shader.Find("Standard"));
+                    Debug.LogWarning("[GameSceneBuilder] URP material not found, using Standard shader");
                 }
             }
 
-            var mat = new Material(_cachedURPLitShader);
+            var mat = new Material(_baseMaterial);
             mat.color = color;
             return mat;
         }
