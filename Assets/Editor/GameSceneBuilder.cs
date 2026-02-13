@@ -25,8 +25,45 @@ namespace Soyya.WaffleMonster
             CreatePickups();
             SetupCamera();
 
+            // シーンを保存するようマーク
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+                UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+
             Debug.Log("[GameSceneBuilder] シーン生成完了！");
             Debug.Log("[GameSceneBuilder] ⚠ Window > AI > Navigation からNavMeshをベイクしてください");
+        }
+
+        [MenuItem("Soyya/シーンセットアップ/シーンをクリア＆再生成")]
+        public static void ClearAndRebuild()
+        {
+            // 既存オブジェクトを削除（Main CameraとDirectional Light以外）
+            var rootObjects = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
+            foreach (var obj in rootObjects)
+            {
+                if (obj.name == "Main Camera" || obj.name == "Directional Light") continue;
+                Object.DestroyImmediate(obj);
+            }
+
+            // マテリアルフォルダを削除して再作成
+            if (AssetDatabase.IsValidFolder("Assets/Materials"))
+            {
+                AssetDatabase.DeleteAsset("Assets/Materials");
+            }
+
+            AssetDatabase.Refresh();
+            BuildNeonAlleyScene();
+        }
+
+        [MenuItem("Soyya/シーンセットアップ/シーンをクリア")]
+        public static void ClearScene()
+        {
+            var rootObjects = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
+            foreach (var obj in rootObjects)
+            {
+                if (obj.name == "Main Camera" || obj.name == "Directional Light") continue;
+                Object.DestroyImmediate(obj);
+            }
+            Debug.Log("[GameSceneBuilder] シーンをクリアしました");
         }
 
         private static void CreateGround()
@@ -341,14 +378,53 @@ namespace Soyya.WaffleMonster
             }
         }
 
+        private static Shader _cachedURPLitShader;
+
         private static Material CreateURPMaterial(Color color)
         {
-            var shader = Shader.Find("Universal Render Pipeline/Lit");
-            if (shader == null)
+            if (_cachedURPLitShader == null)
             {
-                shader = Shader.Find("Standard");
+                // Unity 6.3 では複数の名前でLitシェーダーを検索
+                string[] shaderNames = {
+                    "Universal Render Pipeline/Lit",
+                    "URP/Lit",
+                    "Shader Graphs/Lit",
+                };
+
+                foreach (var name in shaderNames)
+                {
+                    _cachedURPLitShader = Shader.Find(name);
+                    if (_cachedURPLitShader != null) break;
+                }
+
+                // AssetDatabaseから検索（最終手段）
+                if (_cachedURPLitShader == null)
+                {
+                    string[] guids = AssetDatabase.FindAssets("Lit t:Shader");
+                    foreach (string guid in guids)
+                    {
+                        string path = AssetDatabase.GUIDToAssetPath(guid);
+                        if (path.Contains("Universal") || path.Contains("URP"))
+                        {
+                            _cachedURPLitShader = AssetDatabase.LoadAssetAtPath<Shader>(path);
+                            if (_cachedURPLitShader != null)
+                            {
+                                Debug.Log($"[GameSceneBuilder] Found URP shader at: {path}");
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // 最終フォールバック
+                if (_cachedURPLitShader == null)
+                {
+                    _cachedURPLitShader = Shader.Find("Standard");
+                    Debug.LogWarning("[GameSceneBuilder] URP Litシェーダーが見つかりません。Standardを使用します。");
+                }
             }
-            var mat = new Material(shader);
+
+            var mat = new Material(_cachedURPLitShader);
             mat.color = color;
             return mat;
         }
