@@ -19,11 +19,15 @@ namespace Soyya.WaffleMonster
         public UnityEvent<GameState> OnStateChanged;
         public UnityEvent<float> OnTimeUpdated;
         public UnityEvent<int> OnWaffleCountChanged;
+        public UnityEvent<int> OnCountdown; // 3,2,1カウント用
+        public UnityEvent<int> OnComboChanged;
 
         public GameState CurrentState { get; private set; } = GameState.Title;
         public float RemainingTime { get; private set; }
         public int WaffleCount { get; private set; }
         public float TimeLimit => _timeLimit;
+        public int ComboCount { get; private set; }
+        public int MaxCombo { get; private set; }
 
         private void Awake()
         {
@@ -39,7 +43,8 @@ namespace Soyya.WaffleMonster
         {
             WaffleCount = _initialWaffleCount;
             RemainingTime = _timeLimit;
-            ChangeState(GameState.Ready);
+            // タイトル画面から開始
+            ChangeState(GameState.Title);
         }
 
         private void Update()
@@ -58,16 +63,20 @@ namespace Soyya.WaffleMonster
 
         public void ChangeState(GameState newState)
         {
-            if (CurrentState == newState) return;
             CurrentState = newState;
             OnStateChanged?.Invoke(newState);
 
             switch (newState)
             {
+                case GameState.Title:
+                    Time.timeScale = 0f;
+                    break;
                 case GameState.Ready:
+                    Time.timeScale = 1f;
                     StartCoroutine(ReadyCountdown());
                     break;
                 case GameState.Playing:
+                    Time.timeScale = 1f;
                     break;
                 case GameState.GameOver:
                     OnGameOver();
@@ -81,6 +90,13 @@ namespace Soyya.WaffleMonster
         private System.Collections.IEnumerator ReadyCountdown()
         {
             // 3-2-1 カウントダウン
+            for (int i = 3; i >= 1; i--)
+            {
+                OnCountdown?.Invoke(i);
+                AudioManager.Instance?.PlaySE(AudioManager.Instance.SeCountdown);
+                yield return new WaitForSeconds(1f);
+            }
+            OnCountdown?.Invoke(0); // GO!
             yield return new WaitForSeconds(0.5f);
             ChangeState(GameState.Playing);
         }
@@ -89,7 +105,10 @@ namespace Soyya.WaffleMonster
         {
             RemainingTime = _timeLimit;
             WaffleCount = _initialWaffleCount;
+            ComboCount = 0;
+            MaxCombo = 0;
             OnWaffleCountChanged?.Invoke(WaffleCount);
+            OnComboChanged?.Invoke(ComboCount);
             ChangeState(GameState.Ready);
         }
 
@@ -101,6 +120,11 @@ namespace Soyya.WaffleMonster
             if (WaffleCount <= 0) return false;
             WaffleCount--;
             OnWaffleCountChanged?.Invoke(WaffleCount);
+
+            // 統計
+            if (DifficultyManager.Instance != null)
+                DifficultyManager.Instance.TotalWafflesThrown++;
+
             return true;
         }
 
@@ -112,6 +136,30 @@ namespace Soyya.WaffleMonster
             WaffleCount += count;
             OnWaffleCountChanged?.Invoke(WaffleCount);
             AudioManager.Instance?.PlaySE(AudioManager.Instance.SePickup);
+        }
+
+        /// <summary>
+        /// ワッフル命中（コンボ加算）
+        /// </summary>
+        public void OnWaffleHit()
+        {
+            ComboCount++;
+            if (ComboCount > MaxCombo) MaxCombo = ComboCount;
+            OnComboChanged?.Invoke(ComboCount);
+
+            if (DifficultyManager.Instance != null)
+                DifficultyManager.Instance.TotalHits++;
+
+            AudioManager.Instance?.PlaySE(AudioManager.Instance.SeHit);
+        }
+
+        /// <summary>
+        /// コンボリセット（一定時間命中なし）
+        /// </summary>
+        public void ResetCombo()
+        {
+            ComboCount = 0;
+            OnComboChanged?.Invoke(ComboCount);
         }
 
         /// <summary>

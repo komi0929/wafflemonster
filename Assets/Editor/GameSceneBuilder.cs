@@ -97,6 +97,7 @@ namespace Soyya.WaffleMonster
             CreatePickups();
             SetupCamera();
             SetupGameSystems();
+            UIBuilder.BuildAllUI();
         }
 
         // ─── 地面（濡れたアスファルト） ───
@@ -684,9 +685,6 @@ namespace Soyya.WaffleMonster
             // ワッフル弾テンプレート
             CreateWaffleBallPrefab();
 
-            // クロスヘア
-            CreateCrosshairUI();
-
             Debug.Log("[Scene] ゲームシステム構築完了");
         }
 
@@ -753,49 +751,6 @@ namespace Soyya.WaffleMonster
             Debug.Log("[Scene] ワッフル弾Prefab生成完了");
         }
 
-        private static void CreateCrosshairUI()
-        {
-            // UIキャンバス
-            var canvas = new GameObject("GameCanvas");
-            var canvasComp = canvas.AddComponent<Canvas>();
-            canvasComp.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvasComp.sortingOrder = 100;
-            canvas.AddComponent<UnityEngine.UI.CanvasScaler>();
-            canvas.AddComponent<UnityEngine.UI.GraphicRaycaster>();
-
-            // クロスヘア中央のドット
-            var crosshair = new GameObject("Crosshair");
-            crosshair.transform.SetParent(canvas.transform);
-            var img = crosshair.AddComponent<UnityEngine.UI.Image>();
-            img.color = new Color(1f, 1f, 1f, 0.7f);
-            var rt = crosshair.GetComponent<RectTransform>();
-            rt.anchoredPosition = Vector2.zero;
-            rt.sizeDelta = new Vector2(4, 4);
-            rt.anchorMin = new Vector2(0.5f, 0.5f);
-            rt.anchorMax = new Vector2(0.5f, 0.5f);
-
-            // クロスヘア十字の水平線
-            var hLine = new GameObject("CrosshairH");
-            hLine.transform.SetParent(canvas.transform);
-            var hImg = hLine.AddComponent<UnityEngine.UI.Image>();
-            hImg.color = new Color(1f, 1f, 1f, 0.5f);
-            var hRt = hLine.GetComponent<RectTransform>();
-            hRt.anchoredPosition = Vector2.zero;
-            hRt.sizeDelta = new Vector2(20, 2);
-            hRt.anchorMin = new Vector2(0.5f, 0.5f);
-            hRt.anchorMax = new Vector2(0.5f, 0.5f);
-
-            // クロスヘア十字の垂直線
-            var vLine = new GameObject("CrosshairV");
-            vLine.transform.SetParent(canvas.transform);
-            var vImg = vLine.AddComponent<UnityEngine.UI.Image>();
-            vImg.color = new Color(1f, 1f, 1f, 0.5f);
-            var vRt = vLine.GetComponent<RectTransform>();
-            vRt.anchoredPosition = Vector2.zero;
-            vRt.sizeDelta = new Vector2(2, 20);
-            vRt.anchorMin = new Vector2(0.5f, 0.5f);
-            vRt.anchorMax = new Vector2(0.5f, 0.5f);
-        }
 
         // ─── ユーティリティ ───
 

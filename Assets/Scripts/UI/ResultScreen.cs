@@ -6,6 +6,7 @@ namespace Soyya.WaffleMonster
 {
     /// <summary>
     /// リザルト画面（GameClear / GameOver）
+    /// ランク表示、ベストタイム更新、リトライ/タイトル遷移
     /// </summary>
     public class ResultScreen : MonoBehaviour
     {
@@ -14,6 +15,7 @@ namespace Soyya.WaffleMonster
         [SerializeField] private GameObject _gameClearPanel;
         [SerializeField] private TextMeshProUGUI _clearTimeText;
         [SerializeField] private TextMeshProUGUI _clearWaffleText;
+        [SerializeField] private TextMeshProUGUI _clearRankText;
         [SerializeField] private Button _retryButton;
         [SerializeField] private Button _titleButton;
 
@@ -38,7 +40,6 @@ namespace Soyya.WaffleMonster
                 GameManager.Instance.OnStateChanged.AddListener(OnGameStateChanged);
             }
 
-            // ボタンイベント
             if (_retryButton != null)
             {
                 _retryButton.onClick.AddListener(OnRetry);
@@ -53,7 +54,6 @@ namespace Soyya.WaffleMonster
         {
             if (!_isShowing) return;
 
-            // フェードイン
             if (_canvasGroup != null)
             {
                 _canvasGroup.alpha = Mathf.MoveTowards(
@@ -82,15 +82,37 @@ namespace Soyya.WaffleMonster
             _isShowing = true;
             _targetAlpha = 1f;
 
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
             if (_gameOverPanel != null) _gameOverPanel.SetActive(!isClear);
             if (_gameClearPanel != null) _gameClearPanel.SetActive(isClear);
 
             if (isClear && GameManager.Instance != null)
             {
                 float elapsedTime = GameManager.Instance.TimeLimit - GameManager.Instance.RemainingTime;
+
+                string rank = "C";
+                if (DifficultyManager.Instance != null)
+                {
+                    rank = DifficultyManager.Instance.CalculateRank(elapsedTime);
+                    DifficultyManager.Instance.OnGameClear(elapsedTime);
+                }
+
                 if (_clearTimeText != null)
                 {
                     _clearTimeText.text = $"クリアタイム: {elapsedTime:F1}秒";
+                }
+                if (_clearRankText != null)
+                {
+                    _clearRankText.text = $"RANK {rank}";
+                    _clearRankText.color = rank switch
+                    {
+                        "S" => new Color(1f, 0.85f, 0f),
+                        "A" => new Color(0f, 1f, 0.5f),
+                        "B" => new Color(0f, 0.7f, 1f),
+                        _ => new Color(0.6f, 0.6f, 0.6f)
+                    };
                 }
                 if (_clearWaffleText != null)
                 {
@@ -104,12 +126,23 @@ namespace Soyya.WaffleMonster
             gameObject.SetActive(false);
             _isShowing = false;
             if (_canvasGroup != null) _canvasGroup.alpha = 0f;
+
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+
             GameManager.Instance?.StartGame();
         }
 
         private void OnTitle()
         {
-            UnityEngine.SceneManagement.SceneManager.LoadScene("TitleScene");
+            gameObject.SetActive(false);
+            _isShowing = false;
+            if (_canvasGroup != null) _canvasGroup.alpha = 0f;
+
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.ChangeState(GameState.Title);
+            }
         }
 
         private void OnDestroy()
