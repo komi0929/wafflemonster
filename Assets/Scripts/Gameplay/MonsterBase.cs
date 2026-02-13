@@ -42,6 +42,7 @@ namespace Soyya.WaffleMonster
 
         protected NavMeshAgent _agent;
         protected Transform _playerTransform;
+        protected MonsterVisualAnimator _visualAnimator;
         protected MonsterAIState _currentState = MonsterAIState.Patrol;
         protected int _currentPatrolIndex = 0;
         protected bool _isWaiting = false;
@@ -51,6 +52,9 @@ namespace Soyya.WaffleMonster
         protected virtual void Awake()
         {
             _agent = GetComponent<NavMeshAgent>();
+            _visualAnimator = GetComponent<MonsterVisualAnimator>();
+            if (_visualAnimator == null)
+                _visualAnimator = gameObject.AddComponent<MonsterVisualAnimator>();
         }
 
         protected virtual void Start()
@@ -121,6 +125,7 @@ namespace Soyya.WaffleMonster
         {
             // 発見演出後に追跡へ
             AudioManager.Instance?.PlaySE(AudioManager.Instance.SeMonsterDetect);
+            _visualAnimator?.ShowAlert(1f);
             SetState(MonsterAIState.Chase);
         }
 
@@ -243,6 +248,7 @@ namespace Soyya.WaffleMonster
         protected virtual IEnumerator EatCoroutine(Vector3 wafflePosition)
         {
             SetState(MonsterAIState.Eat);
+            _visualAnimator?.ShowPaku(1.5f);
 
             // ワッフルの位置を向く
             Vector3 lookDir = (wafflePosition - transform.position);
