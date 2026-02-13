@@ -3,16 +3,17 @@ using UnityEngine;
 namespace Soyya.WaffleMonster
 {
     /// <summary>
-    /// 3人称追従カメラ（Cinemachineなしの軽量版）
-    /// プレイヤーの背後上方から追従
+    /// FPS/TPS切り替え可能カメラ
+    /// PlayerControllerの子として動作し、マウスによる上下回転を担当
     /// </summary>
     public class FollowCamera : MonoBehaviour
     {
-        [Header("Target")]
-        [SerializeField] private Transform _target;
+        [Header("Mode")]
+        [SerializeField] private bool _firstPerson = true;
 
-        [Header("Camera Settings")]
-        [SerializeField] private Vector3 _offset = new Vector3(0f, 8f, -6f);
+        [Header("Third Person Settings")]
+        [SerializeField] private Transform _target;
+        [SerializeField] private Vector3 _tpsOffset = new Vector3(0f, 8f, -6f);
         [SerializeField] private float _smoothSpeed = 5f;
         [SerializeField] private float _lookAheadDistance = 2f;
         [SerializeField] private float _rotationDamping = 3f;
@@ -23,12 +24,34 @@ namespace Soyya.WaffleMonster
 
         private Vector3 _currentVelocity;
 
+        private void Start()
+        {
+            // プレイヤーの子になっている場合はFPSモード
+            if (transform.parent != null && transform.parent.GetComponent<PlayerController>() != null)
+            {
+                _firstPerson = true;
+                _target = transform.parent;
+            }
+            else if (_target == null)
+            {
+                // Playerを自動検出
+                var player = GameObject.FindWithTag("Player");
+                if (player != null)
+                {
+                    _target = player.transform;
+                }
+            }
+        }
+
         private void LateUpdate()
         {
+            // FPSモード: PlayerControllerがカメラの回転を制御
+            if (_firstPerson) return;
+
+            // TPSモード: 従来の追従カメラ
             if (_target == null) return;
 
-            // 目標位置：プレイヤーの後方上方
-            Vector3 desiredPosition = _target.position + _offset;
+            Vector3 desiredPosition = _target.position + _tpsOffset;
 
             // 壁の衝突回避
             Vector3 dirToCamera = desiredPosition - _target.position;
@@ -43,7 +66,6 @@ namespace Soyya.WaffleMonster
                 }
             }
 
-            // スムーズ追従
             transform.position = Vector3.SmoothDamp(
                 transform.position,
                 desiredPosition,
@@ -51,7 +73,6 @@ namespace Soyya.WaffleMonster
                 1f / _smoothSpeed
             );
 
-            // プレイヤーの少し前方を見る
             Vector3 lookTarget = _target.position + _target.forward * _lookAheadDistance + Vector3.up * 1.5f;
             Quaternion targetRotation = Quaternion.LookRotation(lookTarget - transform.position);
             transform.rotation = Quaternion.Slerp(
@@ -61,9 +82,6 @@ namespace Soyya.WaffleMonster
             );
         }
 
-        /// <summary>
-        /// ターゲットを設定
-        /// </summary>
         public void SetTarget(Transform target)
         {
             _target = target;

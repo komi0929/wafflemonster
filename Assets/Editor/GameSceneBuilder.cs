@@ -363,11 +363,19 @@ namespace Soyya.WaffleMonster
         private static void SetupCamera()
         {
             var mainCam = Camera.main;
-            if (mainCam != null)
+            var player = GameObject.Find("Player");
+
+            if (mainCam != null && player != null)
             {
+                // カメラをプレイヤーの子に設定（FPSモード）
+                mainCam.transform.SetParent(player.transform);
+                mainCam.transform.localPosition = new Vector3(0f, 0.7f, 0.2f); // 目の位置
+                mainCam.transform.localRotation = Quaternion.identity;
+
                 mainCam.gameObject.AddComponent<FollowCamera>();
                 mainCam.backgroundColor = new Color(0.01f, 0.01f, 0.03f);
-                mainCam.fieldOfView = 60f;
+                mainCam.fieldOfView = 70f;
+                mainCam.nearClipPlane = 0.1f;
 
                 var urpData = mainCam.GetComponent<UniversalAdditionalCameraData>();
                 if (urpData == null)
@@ -375,6 +383,13 @@ namespace Soyya.WaffleMonster
                     urpData = mainCam.gameObject.AddComponent<UniversalAdditionalCameraData>();
                 }
                 urpData.renderPostProcessing = true;
+
+                // Playerのレンダラーを非表示（FPSでは自分が見えない）
+                var playerRenderer = player.GetComponent<Renderer>();
+                if (playerRenderer != null)
+                {
+                    playerRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+                }
             }
         }
 
