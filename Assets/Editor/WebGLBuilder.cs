@@ -39,8 +39,9 @@ namespace Soyya.Editor
 
             Debug.Log($"[WebGLBuilder] ビルド対象シーン: {string.Join(", ", scenes)}");
 
-            // WebGL Player Settings
-            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;
+            // WebGL Player Settings（GitHub Pages対応: 圧縮無効 + Decompression Fallback）
+            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
+            PlayerSettings.WebGL.decompressionFallback = true; // GitHub Pages対応
             PlayerSettings.WebGL.dataCaching = true;
             PlayerSettings.WebGL.debugSymbolMode = WebGLDebugSymbolMode.Off;
             PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly;
